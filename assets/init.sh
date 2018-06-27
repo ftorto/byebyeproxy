@@ -122,6 +122,7 @@ terminated () {
     kill -TERM $$
 }
 
+echo "DEBUG*** $1"
 case "$1" in
     stop )  stop ;;
     * )     run ;;

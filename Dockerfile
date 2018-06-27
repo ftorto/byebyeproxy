@@ -11,5 +11,5 @@ ADD assets/redsocks.conf /app/redsocks.conf
 ADD assets/init.sh /app/init.sh
 
 RUN chmod +x /app/init.sh
-CMD sh /app/init.sh
+ENTRYPOINT ["/app/init.sh"]
 
