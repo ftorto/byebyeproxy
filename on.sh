@@ -1,14 +1,22 @@
 #!/bin/bash
 
-pushd /home/ftortora/scripts/byebyeproxy > /dev/null
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-export http_proxy="http://172.27.128.34:3128"
+if [ -z $(docker ps --filter="ancestor=ftorto/byebyeproxy" -q) ]
+then
 
-python3 ./docker_conf_proxy.py on
+  pushd ${DIR} > /dev/null
 
-docker run -it --net=host --privileged -d \
-  -e http_proxy=${http_proxy} \
-  ftorto/byebyeproxy:latest
+  export http_proxy="http://172.27.128.34:3128"
 
-popd > /dev/null
+  python3 ./docker_conf_proxy.py on
 
+  docker run -it --net=host --privileged -d \
+    -e http_proxy=${http_proxy} \
+    ftorto/byebyeproxy:latest
+
+  popd > /dev/null
+
+else
+  echo "byebyeproxy already started"
+fi
