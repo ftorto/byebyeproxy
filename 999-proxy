@@ -10,6 +10,9 @@
 # sudo ln -s $(pwd)/999-proxy /etc/network/if-down.d/999-proxy
 # ```
 
+YOUR_CORPORATE_IP=172.28.9.21
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 logger -t if-up/proxy "Checking $IFACE for byebyeproxy"
 # Check "ip link show $IFACE" and avoid local or bridge
@@ -18,12 +21,12 @@ then
   logger -t if-up/proxy "$IFACE not concerned by byebyeproxy"
   exit 0
 fi
-ip address show $IFACE | grep -q "inet 172.28.9.21"
+ip address show $IFACE | grep -q "inet ${YOUR_CORPORATE_IP}"
 if [ $? = 0 ]
 then
   logger -t if-up/proxy "Enable byebyeproxy for $IFACE"
-  /home/ftortora/scripts/byebyeproxy/on.sh
+  ${DIR}/on.sh
 else
   logger -t if-up/proxy "Disable byebyeproxy for $IFACE"
-  /home/ftortora/scripts/byebyeproxy/off.sh
+  ${DIR}/off.sh
 fi

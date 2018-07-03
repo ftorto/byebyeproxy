@@ -13,25 +13,14 @@ The proxy will redirect intercepted trafic to the specified corporate proxy in e
 
 ## Limitations
 
-This image doesn't handle docker environment as it should be.
-I didn't found why but a workaround is to setup `~/.docker/config.json` with
-
-```json
-{
-    "proxies": {
-        "default": {
-            "httpProxy": "http://<corporate_proxy_url>:<port>",
-            "httpsProxy": "http://<corporate_proxy_url>:<port>",
-        }
-    },
-}
-```
-
 You could brake `iptables` rules if container is killed.
-You can try this command or reboot:
+You can try this command or reboot your computer:
 
 ```bash
-docker run -it --net=host --privileged=true -e http_proxy=<corporate_proxy_url_with_port> ftorto/byebyeproxy:latest sh /app/init.sh stop
+docker run -it --net=host --privileged -d \
+  -v noproxy.txt:/app/noproxy \
+  -e http_proxy=${http_proxy} \
+  ftorto/byebyeproxy:latest stop
 ```
 
 ## Build the image

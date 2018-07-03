@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# Set/Unset proxy configuration for docker by modifying ~/.docker/config.json
+
 import sys
 import json
 import os

@@ -1,6 +1,10 @@
 #!/bin/bash
 
-pushd /home/ftortora/scripts/byebyeproxy > /dev/null
+# Stop byebyeproxy
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+pushd ${DIR} > /dev/null
 
 export http_proxy="http://172.27.128.34:3128"
 

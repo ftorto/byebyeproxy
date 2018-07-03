@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Start byebyeproxy
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [ -z $(docker ps --filter="ancestor=ftorto/byebyeproxy" -q) ]
