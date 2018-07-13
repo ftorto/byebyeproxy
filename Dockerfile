@@ -2,14 +2,11 @@ FROM debian:wheezy-slim
 
 RUN apt-get update \
     && apt-get install -y redsocks iptables procps psmisc \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir /app
 
-RUN mkdir /app
+COPY assets/* /app/
 
-ADD assets/noproxy.txt /app/noproxy.txt
-ADD assets/redsocks.conf /app/redsocks.conf
-ADD assets/init.sh /app/init.sh
-
-RUN chmod +x /app/init.sh
-ENTRYPOINT ["/app/init.sh"]
+RUN chmod +x /app/entry_point.sh
+ENTRYPOINT ["/app/entry_point.sh"]
 

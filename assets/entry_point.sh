@@ -12,32 +12,12 @@ iptables_rules() {
     # Ignore LANs and some other reserved addresses.
     for no_proxy_url in $(cat /app/noproxy.txt | grep -v '#')
     do
-        iptables -t nat -${MODE} PREROUTING -d ${no_proxy_url} -i docker0 -j RETURN 2>/dev/null
-    done
-    iptables -t nat -${MODE} PREROUTING -i docker0 -p tcp -m tcp --dport 80   -j REDIRECT --to-ports ${HTTP_RELAY_PORT} 2>/dev/null
-    iptables -t nat -${MODE} PREROUTING -i docker0 -p tcp -m tcp --dport 8080 -j REDIRECT --to-ports ${HTTP_RELAY_PORT} 2>/dev/null
-    iptables -t nat -${MODE} PREROUTING -i docker0 -p tcp -m tcp              -j REDIRECT --to-ports ${HTTP_CONNECT_PORT} 2>/dev/null
-
-    for no_proxy_url in $(cat /app/noproxy.txt | grep -v '#')
-    do
         iptables -t nat -${MODE} PREROUTING -d ${no_proxy_url} -j RETURN 2>/dev/null
     done
-
-    iptables -t nat -${MODE} PREROUTING -p tcp -m tcp --dport 80   -j REDIRECT --to-ports ${HTTP_RELAY_PORT} 2>/dev/null
-    iptables -t nat -${MODE} PREROUTING -p tcp -m tcp --dport 8080 -j REDIRECT --to-ports ${HTTP_RELAY_PORT} 2>/dev/null
-    iptables -t nat -${MODE} PREROUTING -p tcp -m tcp              -j REDIRECT --to-ports ${HTTP_CONNECT_PORT} 2>/dev/null
-
-
-    # Ignore LANs and some other reserved addresses.
-    for no_proxy_url in $(cat /app/noproxy.txt | grep -v '#')
-    do
-        iptables -t nat -${MODE} OUTPUT -d ${no_proxy_url} -p tcp  -j RETURN 2>/dev/null
-    done
-    iptables -t nat -${MODE} OUTPUT -d $(parse_ip $http_proxy) -p tcp -j RETURN 2>/dev/null
-    iptables -t nat -${MODE} OUTPUT -p tcp -m tcp --dport 80   -j REDIRECT --to-ports ${HTTP_RELAY_PORT} 2>/dev/null
-    iptables -t nat -${MODE} OUTPUT -p tcp -m tcp --dport 8080 -j REDIRECT --to-ports ${HTTP_RELAY_PORT} 2>/dev/null
-    iptables -t nat -${MODE} OUTPUT -p tcp -m tcp              -j REDIRECT --to-ports ${HTTP_CONNECT_PORT} 2>/dev/null
-
+    
+    iptables -t nat -${MODE} PREROUTING -p tcp --dport 80   -j REDIRECT --to ${HTTP_RELAY_PORT} 2>/dev/null
+    iptables -t nat -${MODE} PREROUTING -p tcp --dport 8080 -j REDIRECT --to ${HTTP_RELAY_PORT} 2>/dev/null
+    iptables -t nat -${MODE} PREROUTING -p tcp -j REDIRECT --to ${HTTP_CONNECT_PORT} 
 }
 
 append_redsocks_conf() {

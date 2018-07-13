@@ -36,9 +36,21 @@ docker build . -t ftorto/byebyeproxy:latest
 
 ## Start byebyeproxy
 
+- Edit `/etc/docker/daemon.json` to add specfic DNS and reload the configuration
+
 ```bash
+sudo vi /etc/docker/daemon.json
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+- Start byebyeproxy
+
+```bash
+corporate_proxy_url_with_port=http://proxy.corp:3128
 docker run -it --net=host --privileged=true -d \
   -v noproxy.txt:/app/noproxy
-  -e http_proxy=<corporate_proxy_url_with_port> \
+  -e http_proxy=$corporate_proxy_url_with_port \
+  -e https_proxy=$corporate_proxy_url_with_port \
   ftorto/byebyeproxy:latest
 ```
