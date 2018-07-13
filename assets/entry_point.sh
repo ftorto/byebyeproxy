@@ -16,8 +16,11 @@ iptables_rules() {
     done
     
     iptables -t nat -${MODE} PREROUTING -p tcp --dport 80   -j REDIRECT --to ${HTTP_RELAY_PORT} 2>/dev/null
-    iptables -t nat -${MODE} PREROUTING -p tcp --dport 8080 -j REDIRECT --to ${HTTP_RELAY_PORT} 2>/dev/null
     iptables -t nat -${MODE} PREROUTING -p tcp -j REDIRECT --to ${HTTP_CONNECT_PORT} 
+
+    iptables -t nat -${MODE} OUTPUT -p tcp -d $(parse_ip $https_proxy) --dport $(parse_port $https_proxy)  -j RETURN
+    iptables -t nat -${MODE} OUTPUT -p tcp --dport 80  -j REDIRECT --to-ports 22345
+    iptables -t nat -${MODE} OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports 22346
 }
 
 append_redsocks_conf() {
@@ -102,7 +105,6 @@ terminated () {
     kill -TERM $$
 }
 
-echo "DEBUG*** $1"
 case "$1" in
     stop )  stop ;;
     * )     run ;;
