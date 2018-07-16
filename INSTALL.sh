@@ -7,9 +7,9 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if [[ ! -e ${DIR}/config.env ]]
+if [[ ! -e ${HOME}/.byebyeproxy.conf ]]
 then
-cat > ${DIR}/config.env <<EOL
+cat > ${HOME}/.byebyeproxy.conf <<EOL
 #!/usr/bin/env bash
 # Configuration file for byebyeproxy
 
@@ -27,18 +27,18 @@ PROXY_URL_HTTPS=
 DNS_IP=
 
 EOL
-  chown ${SUDO_USER}:${SUDO_USER} ${DIR}/config.env
-  chmod 744 ${DIR}/config.env
-  echo "Your proxy/DNS settings must be set in the file ${DIR}/config.env"
+  chown ${SUDO_USER}:${SUDO_USER} ${HOME}/.byebyeproxy.conf
+  chmod 600 ${HOME}/.byebyeproxy.conf
+  echo "Your proxy/DNS settings must be set in the file ${HOME}/.byebyeproxy.conf"
   echo "Please fill the file before continuing"  
   echo "Press ENTER to continue. Ctrl+C to stop"
   read
 fi
 
-source ${DIR}/config.env
-test -z $PROXY_URL_HTTP && echo "PROXY_URL_HTTP not filled in ${DIR}/config.env" && exit 1
-test -z $PROXY_URL_HTTPS && echo "PROXY_URL_HTTPS not filled in ${DIR}/config.env" && exit 1
-test -z $DNS_IP && echo "DNS_IP not filled in ${DIR}/config.env" && exit 1
+source ${HOME}/.byebyeproxy.conf
+test -z $PROXY_URL_HTTP && echo "PROXY_URL_HTTP not filled in ${HOME}/.byebyeproxy.conf" && exit 1
+test -z $PROXY_URL_HTTPS && echo "PROXY_URL_HTTPS not filled in ${HOME}/.byebyeproxy.conf" && exit 1
+test -z $DNS_IP && echo "DNS_IP not filled in ${HOME}/.byebyeproxy.conf" && exit 1
 
 echo "Installing toggles directly in network events"
 ln -fs $DIR/999-proxy /etc/network/if-up.d/999-proxy
@@ -94,6 +94,6 @@ else
   echo "Docker doesn't need to be restarted"
 fi
 
-echo "Install pxon/pxoff shortcut"
-ln -fs ${DIR}/on.sh /usr/local/bin/pxon
-ln -fs ${DIR}/off.sh /usr/local/bin/pxoff
+# echo "Install pxon/pxoff shortcut"
+# ln -fs ${DIR}/on.sh /usr/local/bin/pxon
+# ln -fs ${DIR}/off.sh /usr/local/bin/pxoff
