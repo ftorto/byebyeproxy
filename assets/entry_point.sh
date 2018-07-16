@@ -18,9 +18,14 @@ iptables_rules() {
     iptables -t nat -${MODE} PREROUTING -p tcp --dport 80   -j REDIRECT --to ${HTTP_RELAY_PORT} 2>/dev/null
     iptables -t nat -${MODE} PREROUTING -p tcp -j REDIRECT --to ${HTTP_CONNECT_PORT} 
 
+
+    for no_proxy_url in $(cat /app/noproxy.txt | grep -v '#')
+    do
+        iptables -t nat -${MODE} OUTPUT -d ${no_proxy_url} -j RETURN 2>/dev/null
+    done
     iptables -t nat -${MODE} OUTPUT -p tcp -d $(parse_ip $https_proxy) --dport $(parse_port $https_proxy)  -j RETURN
-    iptables -t nat -${MODE} OUTPUT -p tcp --dport 80  -j REDIRECT --to-ports 22345
-    iptables -t nat -${MODE} OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports 22346
+    iptables -t nat -${MODE} OUTPUT -p tcp --dport 80  -j REDIRECT --to-ports ${HTTP_RELAY_PORT}
+    iptables -t nat -${MODE} OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports ${HTTP_CONNECT_PORT} 
 }
 
 append_redsocks_conf() {
