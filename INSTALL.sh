@@ -7,14 +7,46 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+if [[ ! -e ${DIR}/config.env ]]
+then
+cat > ${DIR}/config.env <<EOL
+#!/usr/bin/env bash
+# Configuration file for byebyeproxy
+
+# HTTP proxy full url
+# PROXY_URL_HTTP=http://corporate_proxy.com:3128
+PROXY_URL_HTTP=
+
+# HTTPS proxy full URL
+# PROXY_URL_HTTPS=http://corporate_proxy.com:3128
+PROXY_URL_HTTPS=
+
+# DNS IP only (format xxx.xxx.xxx.xxx)
+# Port 53 is used. Do not specify it
+# DNS_IP=corporate_dns_ip
+DNS_IP=
+
+EOL
+  chown ${SUDO_USER}:${SUDO_USER} ${DIR}/config.env
+  chmod 744 ${DIR}/config.env
+  echo "Your proxy/DNS settings must be set in the file ${DIR}/config.env"
+  echo "Please fill the file before continuing"  
+  echo "Press ENTER to continue. Ctrl+C to stop"
+  read
+fi
+
+source ${DIR}/config.env
+test -z $PROXY_URL_HTTP && echo "PROXY_URL_HTTP not filled in ${DIR}/config.env" && exit 1
+test -z $PROXY_URL_HTTPS && echo "PROXY_URL_HTTPS not filled in ${DIR}/config.env" && exit 1
+test -z $DNS_IP && echo "DNS_IP not filled in ${DIR}/config.env" && exit 1
 
 echo "Installing toggles directly in network events"
 ln -fs $DIR/999-proxy /etc/network/if-up.d/999-proxy
 ln -fs $DIR/999-proxy /etc/network/if-down.d/999-proxy
 
+RESTART_NEEDED=1
 if [[ ! -e /etc/docker/daemon.json ]]
 then
-read -p "DNS IP: " DNS_IP
 cat > /etc/docker/daemon.json <<EOL
 {
   "dns": ["${DNS_IP}","8.8.8.8","8.8.4.4"],
@@ -22,20 +54,46 @@ cat > /etc/docker/daemon.json <<EOL
 }
 EOL
 else
-  echo "Check that /etc/docker/daemon.json contains the correct DNS entry or fix it manually"
-  cat /etc/docker/daemon.json
-  echo "Press ENTER to continue. Ctrl+C to stop"
-  read
+
+  if test $(cat /etc/docker/daemon.json | jq -c .dns | grep ${DNS_IP} | wc -l ) -eq 0
+  then
+    echo "Check that /etc/docker/daemon.json contains the correct DNS entry or fix it manually. Content between '----' marks:"
+    echo "----"
+    cat /etc/docker/daemon.json
+    echo "----"
+
+    bkp=$(mktemp)
+    cp /etc/docker/daemon.json $bkp
+
+
+    echo "Press ENTER to continue. Ctrl+C to stop"
+    read
+    diff -q /etc/docker/daemon.json $bkp > /dev/null && RESTART_NEEDED=0
+  else
+    echo "DNS entry found in /etc/docker/daemon.json"
+    RESTART_NEEDED=0
+  fi
 fi
 
-nb_containers=$(docker ps -q| wc -l)
-if test $nb_containers -gt 0
+if test $RESTART_NEEDED -eq 1
 then
-  echo "Docker must be restarted but $nb_containers containers are still running"
-  docker ps
+  nb_containers=$(docker ps -q| wc -l)
+  if test $nb_containers -gt 0
+  then
+    echo "Docker must be restarted but $nb_containers containers are still running"
+    docker ps
+  fi
+
   echo "Press ENTER to restart docker. Ctrl+C to stop"
   read
+  echo "Restarting docker"
+  systemctl daemon-reload
+  systemctl restart docker
+  echo "Docker restarted"
+else
+  echo "Docker doesn't need to be restarted"
 fi
 
-systemctl daemon-reload
-systemctl restart docker
+echo "Install pxon/pxoff shortcut"
+ln -fs ${DIR}/on.sh /usr/local/bin/pxon
+ln -fs ${DIR}/off.sh /usr/local/bin/pxoff
