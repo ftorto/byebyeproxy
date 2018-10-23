@@ -5,11 +5,9 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-if [[ ! -e ${HOME}/.byebyeproxy.conf ]]
+if [[ ! -e "${HOME}/.byebyeproxy.conf" ]]
 then
-cat > ${HOME}/.byebyeproxy.conf <<EOL
+cat > "${HOME}/.byebyeproxy.conf" <<EOL
 #!/usr/bin/env bash
 # Configuration file for byebyeproxy
 
@@ -27,22 +25,18 @@ PROXY_URL_HTTPS=
 DNS_IP=
 
 EOL
-  chown ${SUDO_USER}:${SUDO_USER} ${HOME}/.byebyeproxy.conf
-  chmod 600 ${HOME}/.byebyeproxy.conf
+  chown "${SUDO_USER}":"${SUDO_USER}" "${HOME}/.byebyeproxy.conf"
+  chmod 600 "${HOME}/.byebyeproxy.conf"
   echo "Your proxy/DNS settings must be set in the file ${HOME}/.byebyeproxy.conf"
   echo "Please fill the file before continuing"  
   echo "Press ENTER to continue. Ctrl+C to stop"
   read
 fi
 
-source ${HOME}/.byebyeproxy.conf
-test -z $PROXY_URL_HTTP && echo "PROXY_URL_HTTP not filled in ${HOME}/.byebyeproxy.conf" && exit 1
-test -z $PROXY_URL_HTTPS && echo "PROXY_URL_HTTPS not filled in ${HOME}/.byebyeproxy.conf" && exit 1
-test -z $DNS_IP && echo "DNS_IP not filled in ${HOME}/.byebyeproxy.conf" && exit 1
-
-echo "Installing toggles directly in network events"
-ln -fs $DIR/999-proxy /etc/network/if-up.d/999-proxy
-ln -fs $DIR/999-proxy /etc/network/if-down.d/999-proxy
+source "${HOME}/.byebyeproxy.conf"
+test -z "$PROXY_URL_HTTP" && echo "PROXY_URL_HTTP not filled in ${HOME}/.byebyeproxy.conf" && exit 1
+test -z "$PROXY_URL_HTTPS" && echo "PROXY_URL_HTTPS not filled in ${HOME}/.byebyeproxy.conf" && exit 1
+test -z "$DNS_IP" && echo "DNS_IP not filled in ${HOME}/.byebyeproxy.conf" && exit 1
 
 RESTART_NEEDED=1
 if [[ ! -e /etc/docker/daemon.json ]]
@@ -55,7 +49,7 @@ cat > /etc/docker/daemon.json <<EOL
 EOL
 else
 
-  if test $(cat /etc/docker/daemon.json | jq -c .dns | grep ${DNS_IP} | wc -l ) -eq 0
+  if test "$(jq -c .dns /etc/docker/daemon.json | grep -c "${DNS_IP}")" -eq 0
   then
     echo "Check that /etc/docker/daemon.json contains the correct DNS entry or fix it manually. Content between '----' marks:"
     echo "----"
@@ -63,12 +57,12 @@ else
     echo "----"
 
     bkp=$(mktemp)
-    cp /etc/docker/daemon.json $bkp
+    cp /etc/docker/daemon.json "$bkp"
 
 
     echo "Press ENTER to continue. Ctrl+C to stop"
     read
-    diff -q /etc/docker/daemon.json $bkp > /dev/null && RESTART_NEEDED=0
+    diff -q /etc/docker/daemon.json "$bkp" > /dev/null && RESTART_NEEDED=0
   else
     echo "DNS entry found in /etc/docker/daemon.json"
     RESTART_NEEDED=0
@@ -78,7 +72,7 @@ fi
 if test $RESTART_NEEDED -eq 1
 then
   nb_containers=$(docker ps -q| wc -l)
-  if test $nb_containers -gt 0
+  if test "$nb_containers" -gt 0
   then
     echo "Docker must be restarted but $nb_containers containers are still running"
     docker ps

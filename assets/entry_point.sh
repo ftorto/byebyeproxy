@@ -7,25 +7,25 @@ SOCKS5_PORT=22347
 
 iptables_rules() {
 
-    MODE=$1
+    MODE=${1:A}
 
     # Ignore LANs and some other reserved addresses.
-    for no_proxy_url in $(cat /app/noproxy.txt | grep -v '#')
+    grep -v '^ *#' < /app/noproxy.txt | while IFS= read -r no_proxy_url
     do
-        iptables -t nat -${MODE} PREROUTING -d ${no_proxy_url} -j RETURN 2>/dev/null
+        iptables -t nat -${MODE} PREROUTING -d "${no_proxy_url}" -j RETURN 2>/dev/null
     done
     
     iptables -t nat -${MODE} PREROUTING -p tcp --dport 80   -j REDIRECT --to ${HTTP_RELAY_PORT} 2>/dev/null
     iptables -t nat -${MODE} PREROUTING -p tcp -j REDIRECT --to ${HTTP_CONNECT_PORT} 
 
 
-    for no_proxy_url in $(cat /app/noproxy.txt | grep -v '#')
+    grep -v '^ *#' < /app/noproxy.txt | while IFS= read -r no_proxy_url
     do
-        iptables -t nat -${MODE} OUTPUT -d ${no_proxy_url} -j RETURN 2>/dev/null
+        iptables -t nat -${MODE} OUTPUT -d "${no_proxy_url}" -j RETURN 2>/dev/null
     done
-    iptables -t nat -${MODE} OUTPUT -p tcp -d $(parse_ip $https_proxy) --dport $(parse_port $https_proxy)  -j RETURN
-    iptables -t nat -${MODE} OUTPUT -p tcp --dport 80  -j REDIRECT --to-ports ${HTTP_RELAY_PORT}
-    iptables -t nat -${MODE} OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports ${HTTP_CONNECT_PORT} 
+    iptables -t nat -${MODE} OUTPUT -p tcp -d $(parse_ip "$https_proxy") --dport $(parse_port "$https_proxy")  -j RETURN
+    iptables -t nat -${MODE} OUTPUT -p tcp --dport 80  -j REDIRECT --to-ports "${HTTP_RELAY_PORT}"
+    iptables -t nat -${MODE} OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports "${HTTP_CONNECT_PORT}"
 }
 
 append_redsocks_conf() {
@@ -33,7 +33,7 @@ append_redsocks_conf() {
   local ip=$2
   local port=$3
   local local_port=$4
-  if [ -z "$type" -o -z "$ip" -o -z "$port" -o -z "$local_port" ] ; then
+  if [ -z "$type" ]  || [ -z "$ip" ]  || [ -z "$port" ]  || [ -z "$local_port" ] ; then
     echo missing required parameter >&2
     exit 1
   fi
@@ -79,18 +79,18 @@ run() {
         exit 1
     fi
 
-    ip=$(parse_ip $http_proxy)
-    port=$(parse_port $http_proxy)
+    ip=$(parse_ip "$http_proxy")
+    port=$(parse_port "$http_proxy")
     append_redsocks_conf "http-relay" $ip $port "${HTTP_RELAY_PORT}"
 
     if [ -z "$https_proxy" ]; then
         https_proxy="$http_proxy"
     fi
 
-    ip=$(parse_ip $https_proxy)
-    port=$(parse_port $https_proxy)
-    append_redsocks_conf "http-connect" $ip $port "${HTTP_CONNECT_PORT}"
-    append_redsocks_conf "socks5" $ip $port "${SOCKS5_PORT}"
+    ip=$(parse_ip "$https_proxy")
+    port=$(parse_port "$https_proxy")
+    append_redsocks_conf "http-connect" "$ip" "$port" "${HTTP_CONNECT_PORT}"
+    append_redsocks_conf "socks5" "$ip" "$port" "${SOCKS5_PORT}"
 
     iptables_rules A
 

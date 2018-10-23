@@ -58,7 +58,5 @@ docker run -it --net=host --privileged=true -d \
 ## Semi-automated usage
 
 - `on.sh` and `off.sh` are 2 scripts that allow the activation/deactivation of byebyeproxy based on a configuration file containing proxy settings `~/.byebyeproxy.conf`.
-- `999-proxy` is a toggle script planned to be called each time the network interface changed
-  - Edit it to specify `YOUR_CORPORATE_IP` (assuming you have fixed IP) or change script to set your detection pattern
 - Use `INSTALL.sh` to create links and install configuration file and scripts
   - Have a look at it before to know what it's doing. I don't have handled all cases.
