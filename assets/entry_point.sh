@@ -16,7 +16,7 @@ iptables_rules() {
     done
     
     iptables -t nat -${MODE} PREROUTING -p tcp --dport 80   -j REDIRECT --to ${HTTP_RELAY_PORT} 2>/dev/null
-    iptables -t nat -${MODE} PREROUTING -p tcp -dport 443   -j REDIRECT --to ${HTTP_CONNECT_PORT} 
+    iptables -t nat -${MODE} PREROUTING -p tcp --dport 443  -j REDIRECT --to ${HTTP_CONNECT_PORT} 
     iptables -t nat -${MODE} PREROUTING -p tcp              -j REDIRECT --to ${SOCKS5_PORT} 
 
 
@@ -27,8 +27,7 @@ iptables_rules() {
     iptables -t nat -${MODE} OUTPUT -p tcp -d "$(parse_ip ${https_proxy})" --dport "$(parse_port ${https_proxy})"  -j RETURN
     iptables -t nat -${MODE} OUTPUT -p tcp --dport 80  -j REDIRECT --to-ports ${HTTP_RELAY_PORT}
     iptables -t nat -${MODE} OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports ${HTTP_CONNECT_PORT} 
-
-    iptables -t nat -${MODE} OUTPUT -p tcp -j REDIRECT --to-ports ${SOCKS5_PORT} 
+    iptables -t nat -${MODE} OUTPUT -p tcp             -j REDIRECT --to-ports ${SOCKS5_PORT} 
 }
 
 append_redsocks_conf() {
@@ -36,7 +35,7 @@ append_redsocks_conf() {
   local ip=$2
   local port=$3
   local local_port=$4
-  if [ -z "${type}" -o -z "${ip}" -o -z "${port}" -o -z "${local_port}" ] ; then
+  if [ -z "${type}" ] || [ -z "${ip}" ] || [ -z "${port}" ] || [ -z "${local_port}" ] ; then
     echo missing required parameter >&2
     exit 1
   fi
@@ -47,14 +46,13 @@ redsocks {
   port = $port;
   local_ip = 0.0.0.0;
   local_port = $local_port;  
-}
 EOF
 ) >> /app/redsocks.conf
 
-    if "$type" -eq "socks5"
+    if test "$type" == "socks5"
     then 
-        echo "login = ${SOCKS_LOGIN}" >> /app/redsocks.conf
-        echo "password = ${SOCKS_PASSWORD}" >> /app/redsocks.conf
+        echo "login = ${SOCKS_LOGIN};" >> /app/redsocks.conf
+        echo "password = ${SOCKS_PASSWORD};" >> /app/redsocks.conf
     fi
     
     echo "}" >> /app/redsocks.conf
