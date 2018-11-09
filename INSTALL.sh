@@ -5,6 +5,8 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 if [[ ! -e "${HOME}/.byebyeproxy.conf" ]]
 then
 cat > "${HOME}/.byebyeproxy.conf" <<EOL
@@ -19,13 +21,18 @@ PROXY_URL_HTTP=
 # PROXY_URL_HTTPS=http://corporate_proxy.com:3128
 PROXY_URL_HTTPS=
 
+# SOCKS
+PROXY_SOCKS=
+SOCKS_LOGIN=
+SOCKS_PASSWORD=
+
 # DNS IP only (format xxx.xxx.xxx.xxx)
 # Port 53 is used. Do not specify it
 # DNS_IP=corporate_dns_ip
 DNS_IP=
 
 EOL
-  chown "${SUDO_USER}":"${SUDO_USER}" "${HOME}/.byebyeproxy.conf"
+  chown ${SUDO_USER}:${SUDO_USER} "${HOME}/.byebyeproxy.conf"
   chmod 600 "${HOME}/.byebyeproxy.conf"
   echo "Your proxy/DNS settings must be set in the file ${HOME}/.byebyeproxy.conf"
   echo "Please fill the file before continuing"  
