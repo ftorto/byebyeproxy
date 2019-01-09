@@ -51,8 +51,8 @@ EOF
 
     if test "$type" == "socks5"
     then 
-        echo "login = ${SOCKS_LOGIN};" >> /app/redsocks.conf
-        echo "password = ${SOCKS_PASSWORD};" >> /app/redsocks.conf
+        test -z "${SOCKS_LOGIN}" || echo "login = ${SOCKS_LOGIN};" >> /app/redsocks.conf
+        test -z "${SOCKS_PASSWORD}" || echo "password = ${SOCKS_PASSWORD};" >> /app/redsocks.conf
     fi
     
     echo "}" >> /app/redsocks.conf
