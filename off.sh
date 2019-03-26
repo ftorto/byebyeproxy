@@ -12,6 +12,7 @@ docker stop $(docker ps --filter="ancestor=ftorto/byebyeproxy" -q) >/dev/null 2>
 docker run -it --net=host --privileged -d \
   -e http_proxy=${PROXY_URL_HTTP} \
   -e https_proxy=${PROXY_URL_HTTPS} \
+  -e no_proxy=${NO_PROXY_URLS} \
   ftorto/byebyeproxy:${1:-latest} stop > /dev/null 2>&1 && echo "byebyeproxy disabled"
 
 if [ "$(id -u)" == "0" ]; then

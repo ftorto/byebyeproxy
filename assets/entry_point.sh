@@ -10,7 +10,7 @@ iptables_rules() {
     MODE=$1
 
     # Ignore LANs and some other reserved addresses.
-    for no_proxy_url in $(cat /app/noproxy.txt | grep -v '#')
+    for no_proxy_url in $(echo $no_proxy | tr ',' ' ')
     do
         iptables -t nat -${MODE} PREROUTING -d ${no_proxy_url} -j RETURN 2>/dev/null
     done
@@ -19,7 +19,7 @@ iptables_rules() {
     iptables -t nat -${MODE} PREROUTING -p tcp -j REDIRECT --to ${HTTP_CONNECT_PORT} 
 
 
-    for no_proxy_url in $(cat /app/noproxy.txt | grep -v '#')
+    for no_proxy_url in $(echo $no_proxy | tr ',' ' ')
     do
         iptables -t nat -${MODE} OUTPUT -d ${no_proxy_url} -j RETURN 2>/dev/null
     done

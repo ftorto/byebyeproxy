@@ -21,6 +21,9 @@ PROXY_URL_HTTP=
 # PROXY_URL_HTTPS=http://corporate_proxy.com:3128
 PROXY_URL_HTTPS=
 
+# No PROXY
+NO_PROXY_URLS=0.0.0.0/8,10.0.0.0/8,127.0.0.0/8,169.254.0.0/16,172.16.0.0/12,192.168.0.0/16,224.0.0.0/4,240.0.0.0/4
+
 # DNS IP only (format xxx.xxx.xxx.xxx)
 # Port 53 is used. Do not specify it
 # DNS_IP=corporate_dns_ip

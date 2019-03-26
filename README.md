@@ -18,7 +18,7 @@ You can try this command or reboot your computer:
 
 ```bash
 docker run -it --net=host --privileged -d \
-  -v noproxy.txt:/app/noproxy \
+  -e no_proxy=${no_proxy} \
   -e http_proxy=${http_proxy} \
   ftorto/byebyeproxy:latest stop
 ```
@@ -31,7 +31,6 @@ docker build . -t ftorto/byebyeproxy:latest
 
 ## Configuring
 
-- Edit the noproxy file to add your exceptions
 - Run the image with environment variables filled properly
 
 ## Start byebyeproxy
@@ -49,7 +48,7 @@ sudo systemctl restart docker
 ```bash
 corporate_proxy_url_with_port=http://proxy.corp:3128
 docker run -it --net=host --privileged=true -d \
-  -v noproxy.txt:/app/noproxy \
+  -e no_proxy=${no_proxy} \
   -e http_proxy=$corporate_proxy_url_with_port \
   -e https_proxy=$corporate_proxy_url_with_port \
   ftorto/byebyeproxy:latest
