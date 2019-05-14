@@ -26,7 +26,7 @@ iptables_rules() {
     done
     iptables -t nat -${MODE} OUTPUT -p tcp -d "$(parse_ip ${https_proxy})" --dport "$(parse_port ${https_proxy})"  -j RETURN
     iptables -t nat -${MODE} OUTPUT -p tcp --dport 80  -j REDIRECT --to-ports ${HTTP_RELAY_PORT}
-    iptables -t nat -${MODE} OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports ${HTTP_CONNECT_PORT} 
+    iptables -t nat -${MODE} OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports ${HTTP_CONNECT_PORT}
     iptables -t nat -${MODE} OUTPUT -p tcp             -j REDIRECT --to-ports ${SOCKS5_PORT} 
 }
 
@@ -49,10 +49,10 @@ redsocks {
 EOF
 ) >> /app/redsocks.conf
 
-    if test "$type" == "socks5"
+    if [[ $type == *"socks5"* ]]
     then 
-        echo "login = ${SOCKS_LOGIN};" >> /app/redsocks.conf
-        echo "password = ${SOCKS_PASSWORD};" >> /app/redsocks.conf
+        echo "  login = \"${SOCKS_LOGIN}\";" >> /app/redsocks.conf
+        echo "  password = \"${SOCKS_PASSWORD}\";" >> /app/redsocks.conf
     fi
     
     echo "}" >> /app/redsocks.conf
@@ -108,10 +108,14 @@ run() {
 
     iptables_rules A
 
+    echo "---"
     echo "Ports setup :"
     echo "HTTP_RELAY_PORT=${HTTP_RELAY_PORT}"
     echo "HTTP_CONNECT_PORT=${HTTP_CONNECT_PORT}"
     echo "SOCKS5_PORT=${SOCKS5_PORT}"
+    echo "---"
+    cat /app/redsocks.conf
+    echo "---"
     
     redsocks -c /app/redsocks.conf
 }

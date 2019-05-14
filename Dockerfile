@@ -1,8 +1,8 @@
-FROM debian:wheezy-slim
+FROM debian:stable-slim
 
 RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get install -y redsocks iptables procps psmisc \
+    && apt-get upgrade -qy \
+    && apt-get install -qy redsocks iptables procps psmisc \
     && rm -rf /var/lib/apt/lists/*
 
 COPY assets/* /app/
