@@ -16,7 +16,7 @@ docker run -it --net=host --privileged -d \
   -e SOCKS_LOGIN="${SOCKS_LOGIN:-""}" \
   -e SOCKS_PASSWORD="${SOCKS_PASSWORD:-""}" \
   "ftorto/byebyeproxy:${1:-latest}" stop > /dev/null 2>&1 && echo "byebyeproxy disabled"
-
+  
 if [ "$(id -u)" == "0" ]; then
    iptables-save | wc -l
 fi
