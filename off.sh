@@ -12,6 +12,7 @@ docker stop "$(docker ps --filter='ancestor=ftorto/byebyeproxy' -q)" >/dev/null 
 docker run -it --net=host --privileged -d \
   -e http_proxy="${PROXY_URL_HTTP}" \
   -e https_proxy="${PROXY_URL_HTTPS:-${PROXY_URL_HTTP}}" \
+  -e no_proxy="${NO_PROXY_URLS}" \
   -e proxy_socks="${PROXY_SOCKS:-${PROXY_URL_HTTPS}}" \
   -e SOCKS_LOGIN="${SOCKS_LOGIN:-""}" \
   -e SOCKS_PASSWORD="${SOCKS_PASSWORD:-""}" \

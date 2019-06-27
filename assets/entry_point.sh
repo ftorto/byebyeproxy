@@ -10,7 +10,7 @@ iptables_rules() {
     MODE=${1:A}
 
     # Ignore LANs and some other reserved addresses.
-    grep -v '^ *#' < /app/noproxy.txt | while IFS= read -r no_proxy_url
+    for no_proxy_url in $(echo $no_proxy | tr ',' ' ')
     do
         iptables -t nat -${MODE} PREROUTING -d "${no_proxy_url}" -j RETURN 2>/dev/null
     done
@@ -20,7 +20,7 @@ iptables_rules() {
     iptables -t nat -${MODE} PREROUTING -p tcp              -j REDIRECT --to ${SOCKS5_PORT} 
 
 
-    grep -v '^ *#' < /app/noproxy.txt | while IFS= read -r no_proxy_url
+    for no_proxy_url in $(echo $no_proxy | tr ',' ' ')
     do
         iptables -t nat -${MODE} OUTPUT -d "${no_proxy_url}" -j RETURN 2>/dev/null
     done
