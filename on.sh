@@ -14,7 +14,6 @@ then
     -e proxy_socks="${PROXY_SOCKS:-${PROXY_URL_HTTPS}}" \
     -e SOCKS_LOGIN="${SOCKS_LOGIN:-""}" \
     -e SOCKS_PASSWORD="${SOCKS_PASSWORD:-""}" \
-    -v /home/ftortora/scripts/byebyeproxy/assets/noproxy.txt:/app/noproxy.txt \
     "ftorto/byebyeproxy:${1:-latest}" > /dev/null 2>&1 && echo "byebyeproxy enabled"
 
 else
