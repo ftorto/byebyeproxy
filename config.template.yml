@@ -1,0 +1,27 @@
+version: 2
+# (not implemented) mode can be on:activated, off:deactivated, auto:check the need of proxy 
+mode: "on"
+# Wait interval between 2 successive configuration checks
+checkInterval: 5
+proxy:
+  # List of IP not to forward to proxy (direct access), ie. internal network
+  skip:
+   - "10.0.0.0/8"
+   - "127.0.0.0/8"
+   - "169.254.0.0/16"
+   - "172.16.0.0/12"
+   - "192.168.0.0/16"
+   - "224.0.0.0/4"
+   - "240.0.0.0/4"
+  http: "http://proxy_ip:3128"
+  https: "http://proxy_ip:3128"
+  # Socks proxy only accepts forwarding with proxy credentials
+  socks:
+    url: "proxy_ip:1080"
+    login: "login"
+    password: "password"
+# Local proxy ports to listen and forward connection
+ports:
+  httpRelay: 23456
+  httpConnect: 23457
+  socks5: 23458

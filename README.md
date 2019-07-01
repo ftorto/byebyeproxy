@@ -6,10 +6,10 @@ You don't have to waste your time configuring your laptop apps several times whe
 
 ## Explanation
 
-This image redirects all host traffic to a local _transparent proxy_ (`redsocks`) using `iptables` rules.
+This image intercepts and redirects all host traffic to a local _transparent proxy_ (`redsocks`) using `iptables` rules.
 `iptables` rules are setup inside docker image but due to `--privileged` flag, this acts on host computer.
 
-The proxy will redirect intercepted trafic to the specified corporate proxy in environment variable.
+The proxy will redirect intercepted trafic to the specified corporate proxy specified in configuration file.
 
 ## Limitations
 
@@ -18,8 +18,7 @@ You can try this command or reboot your computer:
 
 ```bash
 docker run -it --net=host --privileged -d \
-  -e no_proxy=${no_proxy} \
-  -e http_proxy=${http_proxy} \
+  -v ${HOME}/.byebyeproxy:/app/config \
   ftorto/byebyeproxy:latest stop
 ```
 
@@ -31,7 +30,7 @@ docker build . -t ftorto/byebyeproxy:latest
 
 ## Configuring
 
-- Run the image with environment variables filled properly
+- fill in the file `${HOME}/.byebyeproxy/config.yml`
 
 ## Start byebyeproxy
 
@@ -46,11 +45,8 @@ sudo systemctl restart docker
 - Start byebyeproxy
 
 ```bash
-corporate_proxy_url_with_port=http://proxy.corp:3128
 docker run -it --net=host --privileged=true -d \
-  -e no_proxy=${no_proxy} \
-  -e http_proxy=$corporate_proxy_url_with_port \
-  -e https_proxy=$corporate_proxy_url_with_port \
+  -v ${HOME}/.byebyeproxy:/app/config \
   ftorto/byebyeproxy:latest
 ```
 
