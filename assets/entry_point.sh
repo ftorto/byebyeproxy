@@ -26,12 +26,25 @@ iptables_rules() {
     # Ignore LANs and some other reserved addresses.
     for no_proxy_url in $(jq -r '.proxy.skip[]' ${appliedConfiguration})
     do
-        echo iptables -t nat -${MODE} PREROUTING -d "${no_proxy_url}" -j RETURN
+        iptables -t nat -${MODE} PREROUTING -d "${no_proxy_url}" -j RETURN
     done
     
-    iptables -t nat -${MODE} PREROUTING -p tcp --dport 80   -j REDIRECT --to ${HTTP_RELAY_PORT}
-    iptables -t nat -${MODE} PREROUTING -p tcp --dport 443  -j REDIRECT --to ${HTTP_CONNECT_PORT} 
-    iptables -t nat -${MODE} PREROUTING -p tcp              -j REDIRECT --to ${SOCKS5_PORT} 
+    for port in $(jq -r '.redirect.httpRelay[]' ${appliedConfiguration})
+    do
+        iptables -t nat -${MODE} PREROUTING -p tcp --dport $port   -j REDIRECT --to ${HTTP_RELAY_PORT}
+    done
+
+    for port in $(jq -r '.redirect.httpConnect[]' ${appliedConfiguration})
+    do
+        iptables -t nat -${MODE} PREROUTING -p tcp --dport $port  -j REDIRECT --to ${HTTP_CONNECT_PORT} 
+    done
+
+    for port in $(jq -r '.redirect.socks5[]' ${appliedConfiguration})
+    do
+        iptables -t nat -${MODE} PREROUTING -p tcp --dport $port -j REDIRECT --to ${SOCKS5_PORT} 
+    done
+
+    iptables -t nat -${MODE} PREROUTING -p tcp -j REDIRECT --to $(jq -r '.redirect.default' ${appliedConfiguration})
 
     for no_proxy_url in $(jq -r '.proxy.skip[]' ${appliedConfiguration})
     do
@@ -41,9 +54,25 @@ iptables_rules() {
     iptables -t nat -${MODE} OUTPUT -p tcp -d "$(parse_ip ${http_proxy})" --dport "$(parse_port ${http_proxy})"  -j RETURN
     iptables -t nat -${MODE} OUTPUT -p tcp -d "$(parse_ip ${https_proxy})" --dport "$(parse_port ${https_proxy})"  -j RETURN
     iptables -t nat -${MODE} OUTPUT -p tcp -d "$(parse_ip ${socks_proxy})" --dport "$(parse_port ${socks_proxy})"  -j RETURN
-    iptables -t nat -${MODE} OUTPUT -p tcp --dport 80  -j REDIRECT --to-ports ${HTTP_RELAY_PORT}
-    iptables -t nat -${MODE} OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports ${HTTP_CONNECT_PORT}
-    iptables -t nat -${MODE} OUTPUT -p tcp             -j REDIRECT --to-ports ${SOCKS5_PORT} 
+
+
+    for port in $(jq -r '.redirect.httpRelay[]' ${appliedConfiguration})
+    do
+        iptables -t nat -${MODE} OUTPUT -p tcp --dport $port  -j REDIRECT --to-ports ${HTTP_RELAY_PORT}
+    done
+    
+
+    for port in $(jq -r '.redirect.httpConnect[]' ${appliedConfiguration})
+    do
+        iptables -t nat -${MODE} OUTPUT -p tcp --dport $port -j REDIRECT --to-ports ${HTTP_CONNECT_PORT}
+    done
+
+    for port in $(jq -r '.redirect.socks5[]' ${appliedConfiguration})
+    do
+        iptables -t nat -${MODE} OUTPUT -p tcp --dport $port -j REDIRECT --to-ports ${SOCKS5_PORT} 
+    done
+
+    iptables -t nat -${MODE} OUTPUT -p tcp -j REDIRECT --to-ports  $(jq -r '.redirect.default' ${appliedConfiguration})
 }
 
 create_redsocks_conf() {
@@ -100,20 +129,17 @@ stop() {
     SOCKS5_PORT=$(jq -r ".ports.socks5" ${appliedConfiguration})
     iptables_rules D "${HTTP_RELAY_PORT}" "${HTTP_CONNECT_PORT}" "${SOCKS5_PORT}"
 
-    kill -9 /tmp/pid
-    pkill redsocks
-    sleep 1
-    rm /tmp/pid
+    kill -9 $(cat /tmp/pid)
+    pkill redsocks && sleep 1 && rm /tmp/pid
 }
 
 start() {
-    ls -l /app/config
     test ! -e ${configFile} && echo "config file not found" && exit 1
 
     # Update checksum
     sha256sum ${configFile} > /tmp/config.sha256
 
-    /app/y2j ${configFile} > ${appliedConfiguration}
+    /app/y2j ${configFile} | jq . > ${appliedConfiguration}
 
     http_proxy=$(jq -r ".proxy.http" ${appliedConfiguration})
     https_proxy=$(jq -r ".proxy.https" ${appliedConfiguration})
@@ -146,6 +172,8 @@ start() {
     iptables_rules A "${HTTP_RELAY_PORT}" "${HTTP_CONNECT_PORT}" "${SOCKS5_PORT}"
 
     showConfig
+    iptables-save > /app/config/iptables-save
+    cp /app/redsocks.conf /app/config/appliedRedsocksConfiguration.conf
 
     redsocks -c /app/redsocks.conf -p /tmp/pid &
 }
@@ -153,14 +181,9 @@ start() {
 showConfig(){
 
     echo "---"
-    echo "Ports setup :"
-    echo "HTTP_RELAY_PORT=${HTTP_RELAY_PORT}"
-    echo "HTTP_CONNECT_PORT=${HTTP_CONNECT_PORT}"
-    echo "SOCKS5_PORT=${SOCKS5_PORT}"
-    echo "---"
     cat /app/redsocks.conf
     echo "---"
-    cat ${configFile}
+    cat ${appliedConfiguration} | jq .
     echo
     echo "---"
 }
@@ -169,7 +192,7 @@ main_loop(){
     while true
     do
         # Check config changes
-        if ! sha256sum -c /tmp/config.sha256
+        if ! sha256sum -c /tmp/config.sha256 > /dev/null 2>&1
         then
             echo "RELOADING. Configuration changed !"
             # Checksum has changed, reload
@@ -190,5 +213,5 @@ case "$1" in
     start ) main;;
     debug ) showConfig;;
     sh ) /bin/bash;;
-    * )     start;;
+    * )     main;;
 esac

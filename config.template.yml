@@ -1,4 +1,4 @@
-version: 2
+version: 3
 # (not implemented) mode can be on:activated, off:deactivated, auto:check the need of proxy 
 mode: "on"
 # Wait interval between 2 successive configuration checks
@@ -24,4 +24,12 @@ proxy:
 ports:
   httpRelay: 23456
   httpConnect: 23457
-  socks5: 23458
+  socks5: &redirectDefault 23458
+redirect:
+  httpRelay: 
+  - 80
+  httpConnect:
+  - 443
+  - 8080
+  socks5: []
+  default: *redirectDefault
